@@ -4,6 +4,8 @@ import 'package:intl/intl.dart'; // Импортируем для формати
 import '../providers/cart_provider.dart';
 import '../models/match.dart';
 import '../data/match_data.dart';
+import 'package:flutter_application_1/widgets/animated_widgets.dart';
+
 
 class CartScreen extends StatelessWidget {
   @override

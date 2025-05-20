@@ -3,6 +3,7 @@ import '../models/match.dart';
 import 'match_modal.dart';
 import 'package:provider/provider.dart';
 import '../providers/cart_provider.dart';
+import 'animated_widgets.dart';
 
 class MatchCard extends StatelessWidget {
   final Match match;
@@ -28,15 +29,18 @@ class MatchCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('${match.team1} vs ${match.team2}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              Text(
+                '${match.team1} vs ${match.team2}',
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 8),
               Text('📍 ${match.stadium}'),
               Text('🗓 ${match.date.toLocal().toString().substring(0, 16)}'),
               Align(
                 alignment: Alignment.centerRight,
-                child: Icon(
-                  match.isFavorite ? Icons.star : Icons.star_border,
-                  color: Colors.amber,
+                child: AnimatedFavoriteIcon(
+                  isFavorite: match.isFavorite,
+                  onTap: onDoubleTap,
                 ),
               ),
               // Добавлена кнопка "Добавить в корзину"

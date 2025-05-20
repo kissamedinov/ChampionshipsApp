@@ -2,9 +2,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:flutter_application_1/utils/image_utils.dart';
-import 'package:url_launcher/url_launcher.dart'; // Для открытия ссылок
+import 'package:url_launcher/url_launcher.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ProfileSettingsScreen extends StatefulWidget {
   @override
@@ -18,14 +18,34 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
   TextEditingController _usernameController = TextEditingController();
   TextEditingController _favoriteTeamController = TextEditingController();
   TextEditingController _bioController = TextEditingController();
-  TextEditingController _instagramController = TextEditingController(); // Новый контроллер для Instagram
-  TextEditingController _twitterController = TextEditingController(); // Новый контроллер для Twitter
+  TextEditingController _instagramController = TextEditingController();
+  TextEditingController _twitterController = TextEditingController();
   File? _avatar;
+  bool _isEmailVerified = false;
 
   @override
   void initState() {
     super.initState();
     _loadProfileData();
+    _checkEmailVerification();
+  }
+
+  Future<void> _checkEmailVerification() async {
+    final user = FirebaseAuth.instance.currentUser;
+    await user?.reload();
+    setState(() {
+      _isEmailVerified = FirebaseAuth.instance.currentUser?.emailVerified ?? false;
+    });
+  }
+
+  Future<void> _sendEmailVerification() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null && !user.emailVerified) {
+      await user.sendEmailVerification();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Verification email sent')),
+      );
+    }
   }
 
   Future<void> _loadProfileData() async {
@@ -34,8 +54,8 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
       _usernameController.text = prefs.getString('username') ?? '';
       _favoriteTeamController.text = prefs.getString('favoriteTeam') ?? '';
       _bioController.text = prefs.getString('bio') ?? '';
-      _instagramController.text = prefs.getString('instagram') ?? ''; // Загрузка Instagram
-      _twitterController.text = prefs.getString('twitter') ?? ''; // Загрузка Twitter
+      _instagramController.text = prefs.getString('instagram') ?? '';
+      _twitterController.text = prefs.getString('twitter') ?? '';
       final avatarPath = prefs.getString('avatarPath');
       if (avatarPath != null && File(avatarPath).existsSync()) {
         _avatar = File(avatarPath);
@@ -49,8 +69,8 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
     await prefs.setString('username', _usernameController.text);
     await prefs.setString('favoriteTeam', _favoriteTeamController.text);
     await prefs.setString('bio', _bioController.text);
-    await prefs.setString('instagram', _instagramController.text); // Сохранение Instagram
-    await prefs.setString('twitter', _twitterController.text); // Сохранение Twitter
+    await prefs.setString('instagram', _instagramController.text);
+    await prefs.setString('twitter', _twitterController.text);
     if (_avatar != null) {
       await prefs.setString('avatarPath', _avatar!.path);
     }
@@ -68,7 +88,6 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
         });
       }
     } catch (e) {
-      // Обработка ошибки при выборе изображения
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error picking image: $e')),
       );
@@ -109,7 +128,6 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
         ),
         validator: (value) {
           if (value != null && value.trim().isNotEmpty) {
-            // Можно добавить проверку на корректность URL
             Uri? uri = Uri.tryParse(value);
             if (uri == null || !uri.hasScheme) {
               return 'Please enter a valid URL';
@@ -123,10 +141,19 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
 
   Future<void> _launchURL(String url) async {
     Uri uri = Uri.parse(url);
-    if (await canLaunch(uri.toString())) {
-      await launch(uri.toString());
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
     } else {
       throw 'Could not launch $url';
+    }
+  }
+
+  Future<void> _logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+    await FirebaseAuth.instance.signOut();
+    if (mounted) {
+      Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
     }
   }
 
@@ -141,12 +168,31 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
             child: CircleAvatar(
               radius: 60,
               backgroundImage: _avatar != null ? FileImage(_avatar!) : null,
-              child: _avatar == null
-                  ? Icon(Icons.camera_alt, size: 40)
-                  : null,
+              child: _avatar == null ? Icon(Icons.camera_alt, size: 40) : null,
             ),
           ),
           const SizedBox(height: 20),
+          if (FirebaseAuth.instance.currentUser?.email != null)
+            Text(
+              'Email: ${FirebaseAuth.instance.currentUser!.email}',
+              style: const TextStyle(color: Colors.white70),
+            ),
+          const SizedBox(height: 10),
+          if (!_isEmailVerified)
+            Column(
+              children: [
+                const Text(
+                  'Email not verified!',
+                  style: TextStyle(color: Colors.red),
+                ),
+                const SizedBox(height: 5),
+                ElevatedButton(
+                  onPressed: _sendEmailVerification,
+                  child: const Text('Send Verification Email'),
+                ),
+                const SizedBox(height: 10),
+              ],
+            ),
           Form(
             key: _formKey,
             child: Column(
@@ -182,7 +228,6 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
               icon: Icon(Icons.edit),
               label: Text("Edit Profile"),
             ),
-          // Показать ссылки на социальные сети в виде кнопок
           if (!_isEditing) ...[
             if (_instagramController.text.isNotEmpty)
               GestureDetector(
@@ -201,6 +246,16 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                 ),
               ),
           ],
+          const SizedBox(height: 30),
+          ElevatedButton.icon(
+            onPressed: _logout,
+            icon: Icon(Icons.logout),
+            label: Text("Logout"),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+          ),
         ],
       ),
     );

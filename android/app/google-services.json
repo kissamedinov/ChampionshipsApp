@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "489851484529",
+    "project_id": "championship-project-aitu",
+    "storage_bucket": "championship-project-aitu.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:489851484529:android:4b5da298e714c9a8e8ded0",
+        "android_client_info": {
+          "package_name": "com.championship.flutterapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB-hzVo5Vdy2qHUBQjzz1K6NWt7Kqm5848"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:489851484529:android:da12bedff578506ce8ded0",
+        "android_client_info": {
+          "package_name": "com.example.flutter_application_1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB-hzVo5Vdy2qHUBQjzz1K6NWt7Kqm5848"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

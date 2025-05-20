@@ -1,0 +1,13 @@
+{
+  "@@locale": "ru",
+  "myMatches": "Мои матчи",
+  "noMatches": "Матчи не найдены.",
+  "createMatch": "Создать матч",
+  "editMatch": "Редактировать матч",
+  "homeTeam": "Хозяева",
+  "awayTeam": "Гости",
+  "stadium": "Стадион",
+  "pickDateTime": "Выбрать дату и время",
+  "save": "Сохранить",
+  "update": "Обновить"
+}

@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:carousel_slider/carousel_slider.dart';
 import '../widgets/upcoming_matches_widget.dart';
+import 'package:flutter_application_1/widgets/animated_widgets.dart';
+
 
 class ChampionshipsListPage extends StatelessWidget {
   final List<Map<String, String>> championships = [

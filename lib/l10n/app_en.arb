@@ -1,0 +1,13 @@
+{
+  "@@locale": "en",
+  "myMatches": "My Matches",
+  "noMatches": "No matches found.",
+  "createMatch": "Create Match",
+  "editMatch": "Edit Match",
+  "homeTeam": "Home Team",
+  "awayTeam": "Away Team",
+  "stadium": "Stadium",
+  "pickDateTime": "Pick Date & Time",
+  "save": "Save",
+  "update": "Update"
+}

@@ -1,11 +1,13 @@
+// lib/widgets/upcoming_matches_widget.dart
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../data/match_data.dart';
-import 'match_card.dart';
 import 'match_modal.dart';
+import 'package:flutter_application_1/widgets/animated_widgets.dart';
 
 class UpcomingMatchesWidget extends StatefulWidget {
-  const UpcomingMatchesWidget({super.key});
+  const UpcomingMatchesWidget({Key? key}) : super(key: key);
 
   @override
   State<UpcomingMatchesWidget> createState() => _UpcomingMatchesWidgetState();
@@ -24,18 +26,20 @@ class _UpcomingMatchesWidgetState extends State<UpcomingMatchesWidget> {
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
         ),
-        ...mockMatches.map((match) => Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-              child: MatchCard(
-                match: match,
-                onTap: () => showMatchModal(context, match),
-                onDoubleTap: () {
-                  setState(() {
-                    match.isFavorite = !match.isFavorite;
-                  });
-                },
-              ),
-            )),
+        ...mockMatches.map((match) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+            child: AnimatedMatchCard(
+              match: match,
+              onTap: () => showMatchModal(context, match),
+              onDoubleTap: () {
+                setState(() {
+                  match.isFavorite = !match.isFavorite;
+                });
+              },
+            ),
+          );
+        }).toList(),
         const SizedBox(height: 10),
         Center(
           child: ElevatedButton.icon(

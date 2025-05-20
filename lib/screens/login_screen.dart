@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import '../services/auth_service.dart'; // Для проверки логина
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import '../services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -15,22 +19,81 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isPasswordVisible = false;
   final _formKey = GlobalKey<FormState>();
 
-  void _login() {
+  Future<void> _login() async {
     if (_formKey.currentState?.validate() ?? false) {
-      // Логика логина
-      bool success = AuthService.instance.login(_usernameController.text, _passwordController.text);
-      
+      final success = await AuthService.instance
+          .login(_usernameController.text, _passwordController.text);
       if (success) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Login Successful')),
         );
-        // Переход на домашнюю страницу после успешного логина
-        Navigator.pushReplacementNamed(context, '/home');
+        context.go('/');
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Invalid credentials')),
         );
       }
+    }
+  }
+
+  Future<void> _loginWithGoogle() async {
+    try {
+      final googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) return;
+      final googleAuth = await googleUser.authentication;
+
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      await FirebaseAuth.instance.signInWithCredential(credential);
+      if (!mounted) return;
+      context.go('/');
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Google sign-in failed: $e')),
+      );
+    }
+  }
+
+  Future<void> _loginWithFacebook() async {
+    try {
+      final result = await FacebookAuth.instance.login();
+      if (result.status == LoginStatus.success) {
+        final credential =
+            FacebookAuthProvider.credential(result.accessToken!.token);
+        await FirebaseAuth.instance.signInWithCredential(credential);
+        if (!mounted) return;
+        context.go('/');
+      } else {
+        throw result.message ?? 'Unknown error';
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Facebook sign-in failed: $e')),
+      );
+    }
+  }
+
+  Future<void> _resetPassword() async {
+    final email = _usernameController.text.trim();
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter your email to reset password')),
+      );
+      return;
+    }
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Password reset email sent')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to send reset email: $e')),
+      );
     }
   }
 
@@ -55,14 +118,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   TextFormField(
                     controller: _usernameController,
                     decoration: InputDecoration(
-                      labelText: 'Username',
-                      hintText: 'Enter your username',
-                      prefixIcon: Icon(Icons.person),
+                      labelText: 'Email',
+                      hintText: 'Enter your email',
+                      prefixIcon: const Icon(Icons.person),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter your username';
+                        return 'Please enter your email';
                       }
                       return null;
                     },
@@ -74,7 +137,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     decoration: InputDecoration(
                       labelText: 'Password',
                       hintText: 'Enter your password',
-                      prefixIcon: Icon(Icons.lock),
+                      prefixIcon: const Icon(Icons.lock),
                       suffixIcon: IconButton(
                         icon: Icon(_isPasswordVisible ? Icons.visibility : Icons.visibility_off),
                         onPressed: () {
@@ -101,12 +164,27 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     child: const Text('Login', style: TextStyle(fontSize: 18)),
                   ),
+                  const SizedBox(height: 10),
+                  ElevatedButton.icon(
+                    onPressed: _loginWithGoogle,
+                    icon: const Icon(Icons.g_mobiledata),
+                    label: const Text('Sign in with Google'),
+                  ),
+                  const SizedBox(height: 10),
+                  ElevatedButton.icon(
+                    onPressed: _loginWithFacebook,
+                    icon: const Icon(Icons.facebook),
+                    label: const Text('Sign in with Facebook'),
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent),
+                  ),
                   const SizedBox(height: 20),
                   TextButton(
-                    onPressed: () {
-                      // Forgot password logic here
-                    },
+                    onPressed: _resetPassword,
                     child: const Text('Forgot Password?', style: TextStyle(color: Colors.blue)),
+                  ),
+                  TextButton(
+                    onPressed: () => context.go('/register'),
+                    child: const Text('Don\'t have an account? Register', style: TextStyle(color: Colors.blue)),
                   ),
                 ],
               ),

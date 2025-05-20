@@ -1,9 +1,11 @@
-// screens/matches_screen.dart
+// lib/screens/matches_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/match.dart';
 import '../providers/cart_provider.dart';
 import '../widgets/match_card.dart';
+import 'package:flutter_application_1/widgets/animated_widgets.dart';
 
 class MatchesScreen extends StatelessWidget {
   final String league;
@@ -22,23 +24,23 @@ class MatchesScreen extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Text(
-              'Top Teams: Bayern Munich, Borussia Dortmund, Hamburg\nLegends: Gerd Muller, Lewandowski, Lahm',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              'Top Teams: Bayern Munich, Borussia Dortmund, Hamburg\n'
+              'Legends: Gerd Muller, Lewandowski, Lahm',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ),
           // Кнопка для покупки билетов
           Padding(
             padding: const EdgeInsets.all(16.0),
-            child: ElevatedButton(
+            child: AnimatedBuyButton(
               onPressed: () {
                 // Логика для добавления матчей в корзину
                 showTicketPurchaseDialog(context);
               },
-              child: Text("Buy Tickets for Top Matches"),
             ),
           ),
           // Отображение списка матчей
-          ...matches.map((match) => MatchCard(
+          ...matches.map((match) => AnimatedMatchCard(
             match: match,
             onTap: () {
               // Действие при нажатии на матч
